@@ -31,7 +31,7 @@ public class acelerometro implements SensorEventListener {
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         try {
             // Inicializamos el socket y lo conectamos al servidor
-            socket = new Socket("192.168.68.119", 5000);
+            socket = new Socket("192.168.1.5", 5000);
             outputStream = socket.getOutputStream();
         } catch (IOException e) {
             Log.e("Acelerometro", "Error al conectar con el servidor: " + e.getMessage());
@@ -80,11 +80,17 @@ public class acelerometro implements SensorEventListener {
         }
 
         try {
+            int x3=0;
             // Comprobamos si hay datos disponibles para leer en el socket
           if (socket.getInputStream().available() != 0  ) {
                 // Enviamos el número correspondiente al servidor
-                outputStream.write(direccion);
-                Thread.sleep(350); // Esperamos un poco antes de enviar el siguiente valor
+
+              while(x3!=1000000000){
+                  x3++;}
+              if(x3==1000000000) {
+                  outputStream.write(direccion);
+              }
+                 // Esperamos un poco antes de enviar el siguiente valor
             }else{
               int availableBytes = socket.getInputStream().available();
               byte[] buffer = new byte[availableBytes];
@@ -94,8 +100,6 @@ public class acelerometro implements SensorEventListener {
             Log.e("Acelerometro", "Error de socket: " + e.getMessage());
         } catch (IOException e) {
             Log.e("Acelerometro", "Error al enviar datos al servidor: " + e.getMessage());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 

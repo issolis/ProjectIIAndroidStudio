@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         // Referencias a las vistas
 
         mButtonSend = findViewById(R.id.button);
+        @SuppressLint("WrongViewCast") TextView pointsTextView = findViewById(R.id.Points);
 
         // Listener del botón enviar
         mButtonSend.setOnClickListener(new View.OnClickListener() {
@@ -52,6 +53,69 @@ public class MainActivity extends AppCompatActivity {
                     throw new RuntimeException(e);
                 }
                 miGiroscopio.start();
+                // Crear un hilo de ejecución
+
+
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Socket socket = null;
+                        BufferedReader reader = null;
+                        try {
+                            // Establecer la conexión con el servidor
+                            socket = new Socket("192.168.1.5", 3000);
+                            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                            // Leer los datos recibidos del servidor de manera continua
+                            String data;
+                            while (true) {
+                                data = reader.readLine();
+
+                                if (data != null) {
+                                    Log.d("TAG", data);
+                                    final String finalData = data;
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            // Asignar los datos a los TextView correspondientes
+
+                                            pointsTextView.setText("Puntos: " + finalData);
+                                        }
+                                    });
+
+
+
+
+
+                                } else {
+                                    // El servidor cerró la conexión, salir del bucle
+                                    break;
+                                }
+
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }  finally {
+                            // Cerrar el socket y el lector de datos
+                            if (reader != null) {
+                                try {
+                                    reader.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            if (socket != null) {
+                                try {
+                                    socket.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                });
+
+                thread.start();
 
             }
         });
