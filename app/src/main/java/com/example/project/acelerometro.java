@@ -31,7 +31,7 @@ public class acelerometro implements SensorEventListener {
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         try {
             // Inicializamos el socket y lo conectamos al servidor
-            socket = new Socket("192.168.1.5", 5000);
+            socket = new Socket("192.168.1.3", 5000);
             outputStream = socket.getOutputStream();
         } catch (IOException e) {
             Log.e("Acelerometro", "Error al conectar con el servidor: " + e.getMessage());

@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText mEditTextMessage;
     private TextView mTextViewMessage;
     private Button mButtonSend;
-    public   Socket socket;
+    public Socket socket;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -38,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
         // Referencias a las vistas
 
         mButtonSend = findViewById(R.id.button);
-        @SuppressLint("WrongViewCast") TextView pointsTextView = findViewById(R.id.Points);
+        TextView pointsTextView = findViewById(R.id.Points);
+        TextView lifesTextView = findViewById(R.id.Lifes);
 
         // Listener del botón enviar
         mButtonSend.setOnClickListener(new View.OnClickListener() {
@@ -55,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
                 miGiroscopio.start();
                 // Crear un hilo de ejecución
 
-
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -63,39 +63,45 @@ public class MainActivity extends AppCompatActivity {
                         BufferedReader reader = null;
                         try {
                             // Establecer la conexión con el servidor
-                            socket = new Socket("192.168.1.5", 3000);
+                            socket = new Socket("192.168.1.3", 3000);
                             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                            // Leer los datos recibidos del servidor de manera continua
                             String data;
                             while (true) {
                                 data = reader.readLine();
+                                final String finalData = data; // Finalizar la variable data para usarla dentro de runOnUiThread
+                                if (finalData != null) {
+                                    String[] parts = finalData.split(";");
+                                    for (String part : parts) {
+                                        String[] pair = part.trim().split(":");
+                                        if (pair.length == 2) {
+                                            String variable = pair[0].trim();
+                                            String valor = pair[1].trim();
 
-                                if (data != null) {
-                                    Log.d("TAG", data);
-                                    final String finalData = data;
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            // Asignar los datos a los TextView correspondientes
-
-                                            pointsTextView.setText("Puntos: " + finalData);
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    if (variable.equals("lifes")) {
+                                                        lifesTextView.setText("Vidas: " + valor);
+                                                    } else if (variable.equals("points")) {
+                                                        pointsTextView.setText("Puntos: " + valor);
+                                                    }
+                                                }
+                                            });
                                         }
-                                    });
+                                    }
 
-
-
-
-
-                                } else {
-                                    // El servidor cerró la conexión, salir del bucle
-                                    break;
                                 }
-
                             }
+
+
+
+
+
+
                         } catch (IOException e) {
                             e.printStackTrace();
-                        }  finally {
+                        } finally {
                             // Cerrar el socket y el lector de datos
                             if (reader != null) {
                                 try {
@@ -116,11 +122,9 @@ public class MainActivity extends AppCompatActivity {
                 });
 
                 thread.start();
-
             }
         });
     }
 
-    // Método que envía un mensaje al servidor y devuelve la respuesta recibida
 
 }
