@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
@@ -38,8 +40,7 @@ public class MainActivity extends AppCompatActivity {
         // Referencias a las vistas
 
         mButtonSend = findViewById(R.id.button);
-        TextView pointsTextView = findViewById(R.id.Points);
-        TextView lifesTextView = findViewById(R.id.Lifes);
+
 
         // Listener del botón enviar
         mButtonSend.setOnClickListener(new View.OnClickListener() {
@@ -55,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 miGiroscopio.start();
                 // Crear un hilo de ejecución
-
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -67,38 +67,26 @@ public class MainActivity extends AppCompatActivity {
                             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
                             String data;
-                            while (true) {
-                                data = reader.readLine();
-                                final String finalData = data; // Finalizar la variable data para usarla dentro de runOnUiThread
-                                if (finalData != null) {
-                                    String[] parts = finalData.split(";");
-                                    for (String part : parts) {
-                                        String[] pair = part.trim().split(":");
-                                        if (pair.length == 2) {
-                                            String variable = pair[0].trim();
-                                            String valor = pair[1].trim();
+                            while ((data = reader.readLine()) != null) {
+                                final String finalData = data;
+                                String[] parts = finalData.split(";");
+                                for (String part : parts) {
+                                    String[] pair = part.trim().split(":");
+                                    if (pair.length == 2) {
+                                        String variable = pair[0].trim();
+                                        String valor = pair[1].trim();
 
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    if (variable.equals("lifes")) {
-                                                        lifesTextView.setText("Vidas: " + valor);
-                                                    } else if (variable.equals("points")) {
-                                                        pointsTextView.setText("Puntos: " + valor);
-                                                    }
-                                                }
-                                            });
-                                        }
+                                        // Utilizar Handler para realizar la actualización en el hilo principal
+                                        Handler handler = new Handler(Looper.getMainLooper());
+                                        handler.post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                updateTextViews(variable, valor);
+                                            }
+                                        });
                                     }
-
                                 }
                             }
-
-
-
-
-
-
                         } catch (IOException e) {
                             e.printStackTrace();
                         } finally {
@@ -119,9 +107,21 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     }
+
+                    private void updateTextViews(String variable, String valor) {
+                        TextView lifesTextView = findViewById(R.id.Lifes);
+                        TextView pointsTextView = findViewById(R.id.Points);
+
+                        if (variable.equals("lifes")) {
+                            lifesTextView.setText("Vidas: " + valor);
+                        } else if (variable.equals("points")) {
+                            pointsTextView.setText("Puntos: " + valor);
+                        }
+                    }
                 });
 
                 thread.start();
+
             }
         });
     }
